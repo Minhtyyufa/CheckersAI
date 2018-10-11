@@ -1,6 +1,8 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#include<ctype.h>
+#include<sstream>
 using namespace std;
 
 
@@ -80,12 +82,13 @@ class moves{
 			boardData[finish[0]][finish[1]]=boardData[start[0]][start[1]];
 			if(doesPromote)
 				boardData[finish[0]][finish[1]]->promote();
-			delete boardData[start[0]][start[1]];
+			boardData[start[0]][start[1]]=NULL;
 			if(!jumps.empty())
 			{
 				for(const pair<int,int> &i : jumps)
 				{
 					delete boardData[i.first][i.second];
+					boardData[i.first][i.second]=NULL;
 				}
 			}
 		}
@@ -105,12 +108,22 @@ class moves{
 		
 };
 
+bool isWord(string);
 void boardBuilder(piece* boardData[8][8]);
 void boardSetter(piece* boardData[8][8]);
 void legalMoves(piece* boardData[8][8], bool compMove);
 void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isKing, int i, int j,moves move);
 void playerMoves(piece* boardData[8][8]);
 
+
+bool isNumber(string s){
+	for(int i=0; i<s.size(); i++)
+	{
+		if(!isdigit(s[i]))
+			return false;
+	}
+	return true;
+}
 
 void boardBuilder(piece* boardData[8][8])
 {
@@ -181,7 +194,7 @@ void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isK
 {
 	bool isJump =false;		
 	piece* temp;
-	if((i+2)<8)
+	if(isKing && (i+2)<8)
 	{
 		if((j+2)<8 && boardData[i+1][j+1]!=NULL && boardData[i+1][j+1]->team() && boardData[i+2][j+2]==NULL)
 			{
@@ -212,7 +225,7 @@ void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isK
 				boardData[i+1][j-1]=temp;
 			}	
 	}
-	if(isKing && i-2>=0)
+	if(i-2>=0)
 	{
 		if((j+2)<8 && boardData[i-1][j+1]!=NULL && boardData[i-1][j+1]->team() && boardData[i-2][j+2]==NULL)
 			{
@@ -247,6 +260,7 @@ void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isK
 	if(!isJump)
 	{
 		move.setFinish(i,j);
+		move.promoteP(i);
 		legalMoves.push_back(move);
 	}
 
@@ -264,7 +278,7 @@ void playerMoves(piece* boardData[8][8])
 		{
 			if(boardData[i][j]==NULL||boardData[i][j]->team())
 				continue;
-			if((i+2)<8)
+			if(boardData[i][j]->king() && (i+2)<8)
 			{
 				if((j+2)<8 && boardData[i+1][j+1]!=NULL && boardData[i+1][j+1]->team() && boardData[i+2][j+2]==NULL)
 					{
@@ -289,7 +303,7 @@ void playerMoves(piece* boardData[8][8])
 						continue;
 					}	
 			}
-			if(boardData[i][j]->king() && i-2>=0)
+			if(i-2>=0)
 			{
 				if((j+2)<8 && boardData[i-1][j+1]!=NULL && boardData[i-1][j+1]->team() && boardData[i-2][j+2]==NULL)
 					{
@@ -301,7 +315,7 @@ void playerMoves(piece* boardData[8][8])
 						moves temp=moves(i,j,i,j);
 						playerJumpCheck(legalMoves, boardData, boardData[i][j]->king(),i,j,temp);	
 					}	
-				else if((j-2)>=0 && boardData[i+1][j-1]!=NULL && boardData[i+1][j-1]->team() && boardData[i+2][j-2]==NULL)
+				else if((j-2)>=0 && boardData[i-1][j-1]!=NULL && boardData[i-1][j-1]->team() && boardData[i-2][j-2]==NULL)
 					{
 						if(!jump)
 						{
@@ -315,31 +329,31 @@ void playerMoves(piece* boardData[8][8])
 			}			
 			if(!jump)
 			{
-				if((i+1)<8)
+				if(boardData[i][j]->king() && (i+1)<8)
 				{
 					if((j+1)<8 && boardData[i+1][j+1]==NULL)
 					{
 						moves temp= moves(i,j,i+1,j+1);
-						temp.promoteP(i+1);	
 						legalMoves.push_back(temp);
 					}
 					if((j-1)>=0 && boardData[i+1][j-1]==NULL)
 					{	
 						moves temp= moves(i,j,i+1,j-1);
-						temp.promoteP(i+1);	
 						legalMoves.push_back(temp);
 					}
 				}
-				if((i-1)>=0 && boardData[i][j]->king())
+				if((i-1)>=0)
 				{
 					if((j+1)<8 && boardData[i-1][j+1]==NULL)
 					{
 						moves temp= moves(i,j,i-1,j+1);
+						temp.promoteP(i-1);	
 						legalMoves.push_back(temp);
 					}
 					if((j-1)>=0 && boardData[i-1][j-1]==NULL)
 					{
 						moves temp= moves(i,j,i-1,j-1);
+						temp.promoteP(i-1);	
 						legalMoves.push_back(temp);
 					}
 				}				 
@@ -357,15 +371,21 @@ void playerMoves(piece* boardData[8][8])
 	while(1)
 	{
 		cin >> input;
-		if(input_find_first_not_of("1234567890")==string::npos)
+		if(isNumber(input))
 		{
 			stringstream i(input);
 			int val = 0;
 			i>>val;
-			legalMoves[i].actuallyMove(boardData);
+			if(val>=0 && val<legalMoves.size())
+			{
+				legalMoves[val].actuallyMove(boardData);
+				break;
+			}
+			else
+				cout<<"Please enter a number within the range";
 		}
 		else
-			cout<<"Please enter a valid input\n";
+			cout<<"Please enter a number\n";
 	}
 	
 }
