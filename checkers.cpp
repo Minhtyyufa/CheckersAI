@@ -132,7 +132,7 @@ void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isK
 				move.delJump();
 				boardData[i+1][j-1]=temp;
 			}	
-	}(j
+	}
 
 	//forwards checking
 	if(i-2>=0)

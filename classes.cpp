@@ -96,6 +96,22 @@ class moves{
 				doesPromote=true;
 		}
 		
+		//simulates a move in the IDS
+		void simulated_move(piece &board)
+		{
+			board[finish[0]][finish[1]]=board[start[0]][start[1]];
+			if(doesPromote)
+				board[finish[0]][finish[1]].promote();
+			board[start[0]][start[1]]=NULL;
+			if(!jumps.empty())
+			{
+				for(const pair<int,int> &i : jumps)
+				{
+					board[i.first][i.second]=NULL;
+				}
+			}
+		}
+
 
 		//actually moves a piece when called.
 		void actuallyMove(piece* boardData[8][8])
