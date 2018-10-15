@@ -3,110 +3,10 @@
 #include<string>
 #include<ctype.h>
 #include<sstream>
+#include "classes.cpp"
+#include "comp_moves.h"
 using namespace std;
-
-
-class piece{
-	private:
-		bool isKing=false;
-		int position[2];
-		bool comp;
-	public:
-		piece(int pos[2], bool c)
-		{
-			comp=c;
-			position[0]=pos[0];
-			position[1]=pos[1];
-		}
-
-		void promote()
-		{
-			isKing=true;
-		}
 		
-		bool team()
-		{
-			return comp;
-		}
-		bool king(){return isKing;}
-		
-};
-class moves{
-		int start[2];
-		int finish[2];
-		vector<pair<int,int> > jumps;
-		vector<pair<int,int> > intermediates;
-		bool doesPromote=false;
-	public:
-		moves(int s1, int s2, int f1, int f2)
-		{
-			start[0]=s1;
-			start[1]=s2;
-			finish[0]=f1;
-			finish[1]=f2;
-		}
-
-		void addIntermediate(int i, int j)
-		{
-			intermediates.push_back(make_pair(i,j));
-		}
-		void delIntermediate()
-		{
-			intermediates.pop_back();
-		}
-		void addJump(int i, int j)
-		{
-			jumps.push_back(make_pair(i,j));	
-		}
-		void delJump()
-		{
-			jumps.pop_back();
-		}
-		
-
-		bool checkFirst(int i, int j){return (i==start[0],j==start[1]);}
-
-		
-		void setFinish(int i, int j)
-		{
-			finish[0]=i;
-			finish[1]=j;
-		}
-		void promoteP(int i)
-		{
-			if(i==0)
-				doesPromote=true;
-		}
-		void actuallyMove(piece* boardData[8][8])
-		{
-			boardData[finish[0]][finish[1]]=boardData[start[0]][start[1]];
-			if(doesPromote)
-				boardData[finish[0]][finish[1]]->promote();
-			boardData[start[0]][start[1]]=NULL;
-			if(!jumps.empty())
-			{
-				for(const pair<int,int> &i : jumps)
-				{
-					delete boardData[i.first][i.second];
-					boardData[i.first][i.second]=NULL;
-				}
-			}
-		}
-		void print()
-		{
-			char letters[8]={'a','b','c','d','e','f','g','h'};
-			cout<<"From "<< start[0] << letters[start[1]]<<" to "<< finish[0] << letters[finish[1]];
-			if(intermediates.size()!=0)
-			{
-				for(const pair<int,int> &i : intermediates)
-				{
-					cout<<" through " << i.first<<letters[i.second];
-				}
-			}
-			cout<<endl;
-		}
-		
-};
 
 bool isWord(string);
 void boardBuilder(piece* boardData[8][8]);
@@ -115,7 +15,7 @@ void legalMoves(piece* boardData[8][8], bool compMove);
 void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isKing, int i, int j,moves move);
 void playerMoves(piece* boardData[8][8]);
 
-
+//Number checker
 bool isNumber(string s){
 	for(int i=0; i<s.size(); i++)
 	{
@@ -125,6 +25,7 @@ bool isNumber(string s){
 	return true;
 }
 
+//Builds the board given initial conditions
 void boardBuilder(piece* boardData[8][8])
 {
 	cout<<"\033[1m    a   b   c   d   e   f   g   h  \n"; 
@@ -157,6 +58,8 @@ void boardBuilder(piece* boardData[8][8])
 	}
 	return;
 }
+
+//Custom board Setting
 void boardSetter(piece* boardData[8][8])
 {
 	boardBuilder(boardData);
@@ -190,10 +93,15 @@ void boardSetter(piece* boardData[8][8])
 	}
 }
 
+
+//Checks Jumps for Player
 void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isKing, int i, int j,moves move)
 {
-	bool isJump =false;		
+		
+	bool isJump =false;//is there another available jump		
 	piece* temp;
+
+	//Backwards checking
 	if(isKing && (i+2)<8)
 	{
 		if((j+2)<8 && boardData[i+1][j+1]!=NULL && boardData[i+1][j+1]->team() && boardData[i+2][j+2]==NULL)
@@ -224,7 +132,9 @@ void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isK
 				move.delJump();
 				boardData[i+1][j-1]=temp;
 			}	
-	}
+	}(j
+
+	//forwards checking
 	if(i-2>=0)
 	{
 		if((j+2)<8 && boardData[i-1][j+1]!=NULL && boardData[i-1][j+1]->team() && boardData[i-2][j+2]==NULL)
@@ -257,20 +167,24 @@ void playerJumpCheck(vector<moves> &legalMoves, piece* boardData[8][8], bool isK
 			}	
 	
 	}
+
+	//if there is no extra jump, add the jump.
 	if(!isJump)
 	{
 		move.setFinish(i,j);
-		move.promoteP(i);
+		move.promote_piece(i, false);
 		legalMoves.push_back(move);
 	}
 
 } 
 
 
+
+//shows players available moves as well as actually moves the pieces
 void playerMoves(piece* boardData[8][8])
 {
 	bool jump=false;
-	vector<moves> legalMoves;
+	vector<moves> legalMoves;//vector of available moves
 	
 	for(int i=0; i<8; i++)
 	{
@@ -347,13 +261,13 @@ void playerMoves(piece* boardData[8][8])
 					if((j+1)<8 && boardData[i-1][j+1]==NULL)
 					{
 						moves temp= moves(i,j,i-1,j+1);
-						temp.promoteP(i-1);	
+						temp.promote_piece(i-1,false);	
 						legalMoves.push_back(temp);
 					}
 					if((j-1)>=0 && boardData[i-1][j-1]==NULL)
 					{
 						moves temp= moves(i,j,i-1,j-1);
-						temp.promoteP(i-1);	
+						temp.promote_piece(i-1,false);	
 						legalMoves.push_back(temp);
 					}
 				}				 
@@ -362,11 +276,16 @@ void playerMoves(piece* boardData[8][8])
 		}
 	}
 
+
+	//prints legal moves
 	for(int i=0; i<legalMoves.size(); i++)
 	{
 		cout<< i <<". ";
 		legalMoves[i].print();
 	}
+
+
+	//takes move choice from user
 	string input;
 	while(1)
 	{
@@ -390,6 +309,8 @@ void playerMoves(piece* boardData[8][8])
 	
 }
 
+
+
 int main()
 { 
 	piece* boardData[8][8]={NULL};
@@ -397,7 +318,7 @@ int main()
 	boardSetter(boardData);
 	boardBuilder(boardData);
 	playerMoves(boardData);	
-	
+	comp_moves(boardData);	
 	/*
 	for(int i=0; i<8; i++)
 	{
