@@ -1,9 +1,14 @@
 #include<iostream>
-#include "classes.cpp"
 
 using namespace std;
+int get_min(int first, int second)
+int get_max(int first, int second)
+void jump_check(moves (&pos_moves)[100], int &back, piece board[8][8], bool is_king, int i, int j, moves move,bool team)
+void legal_moves_gen(moves (&pos_moves)[100], int &back, piece non_ptr_board[8][8],bool team)
+void comp_move_selector(piece* boardData[8][8])
+int IDS(int depth, piece board[8][8], int max_depth, int alpha, int beta, moves move)
 
-void jump_check(moves &pos_moves[100], int &back, piece board[8][8], bool is_king, int i, int j, moves move,bool team)
+void jump_check(moves (&pos_moves)[100], int &back, piece board[8][8], bool is_king, int i, int j, moves move,bool team)
 {
 		
 	bool is_jump = false;
@@ -157,7 +162,7 @@ void jump_check(moves &pos_moves[100], int &back, piece board[8][8], bool is_kin
 	}
 }
 
-void legal_moves_gen(moves &pos_moves[100], int &back, piece non_ptr_board[8][8],bool team)
+void legal_moves_gen(moves (&pos_moves)[100], int &back, piece non_ptr_board[8][8],bool team)
 {
 	bool jump=false;
 	for(int i=0; i<8; i++)

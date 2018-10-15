@@ -97,7 +97,7 @@ class moves{
 		}
 		
 		//simulates a move in the IDS
-		void simulated_move(piece &board)
+		void simulated_move(piece (&board)[8][8])
 		{
 			board[finish[0]][finish[1]]=board[start[0]][start[1]];
 			if(doesPromote)
